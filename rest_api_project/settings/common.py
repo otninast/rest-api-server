@@ -150,7 +150,8 @@ CORS_ORIGIN_WHITELIST = (
     'localhost:8080/',
     'localhost:8080',
     '127.0.0.1:8080/',
-    '127.0.0.1:8080'
+    '127.0.0.1:8080',
+    'swim-ast-record-view.s3-website-ap-northeast-1.amazonaws.com'
 )
 MEDIA_ROOT = os.path.join(BASE_DIR, 'image')
 MEDIA_URL = '/image/'
