@@ -19,5 +19,4 @@ jobs:
       - run:
           name: run test
           command: |
-            cd rest_api_project
             python manage.py test
