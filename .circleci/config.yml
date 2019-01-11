@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/python:3.7.1
-    working_directory: /home/circleci/project/swim
+    working_directory: /home/circleci/project/rest_api_project
     steps:
       - checkout
       - run:
@@ -19,5 +19,4 @@ jobs:
       - run:
           name: run test
           command: |
-            cd swim
-            python ./manage.py test
+            python manage.py test rest_api_app.tests
