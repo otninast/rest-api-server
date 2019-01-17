@@ -1,9 +1,9 @@
-BUILD_DIR=.
-REGION=ap-northeast-1
-APP_NAME=rest-api-server
-DEPLOYMENT_GROUP=rest-api-server-group
-DEPLOYMENT_CONFIG=CodeDeployDefault.AllAtOnce
-S3_BUCKET=rest-api-server
+BUILD_DIR="."
+REGION="ap-northeast-1"
+APP_NAME="rest-api-server"
+DEPLOYMENT_GROUP="rest-api-server-group"
+DEPLOYMENT_CONFIG="CodeDeployDefault.AllAtOnce"
+S3_BUCKET="rest-api-server"
 TAG=`date '+%Y%m%d%H%M'`
 S3_KEY=dev/${APP_NAME}_$TAG.zip
 

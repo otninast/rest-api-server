@@ -59,7 +59,9 @@ jobs:
       - checkout
       - run:
           name: do deploy script
-          command: sh ./deploy_script.sh
+          command: |
+            sudo chmod +x ./deploy_script.sh
+            sh ./deploy_script.sh
     # working_directory: /home/circleci/project/rest_api_project
     # environment:
     #   - AWS_DEFAULT_REGION: ap-northeast-1
