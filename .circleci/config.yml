@@ -39,6 +39,13 @@ jobs:
           path: test-reports
           destination: test-reports
 
+      - run:
+          name: deactivate
+          command: |
+            which python
+            . deavtivate
+            which python
+
       - persist_to_workspace:
           root: .
           paths:
