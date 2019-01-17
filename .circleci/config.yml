@@ -39,12 +39,12 @@ jobs:
           path: test-reports
           destination: test-reports
 
-      - run:
-          name: deactivate
-          command: |
-            which python
-            deactivate
-            which python
+      # - run:
+      #     name: deactivate
+      #     command: |
+      #       which python
+      #       deactivate
+      #       which python
 
       - persist_to_workspace:
           root: .
@@ -64,7 +64,11 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: sh /bin/aws-s3-deploy
+      - run:
+        name: aws-s3-deploy
+        command: |
+          which python
+          sh /bin/aws-s3-deploy
 
 workflows:
   version: 2
