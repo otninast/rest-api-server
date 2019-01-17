@@ -23,8 +23,8 @@ jobs:
       - run:
           name: chown site-packages, usr/bin
           command: |
-          sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages/
-          sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages/
+            sudo chown -R circleci:circleci /usr/local/bin
       - run:
           name: pip install
           command: |
