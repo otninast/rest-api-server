@@ -46,29 +46,42 @@ jobs:
       #       deactivate
       #       which python
 
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
+      # - persist_to_workspace:
+      #     root: .
+      #     paths:
+      #       - .
 
   deploy:
-    working_directory: /home/circleci/project/rest_api_project
-    environment:
-      - AWS_DEFAULT_REGION: ap-northeast-1
-      - CODE_DEPLOY_S3_BUCKET_NAME: rest-api-server
-      - CODE_DEPLOY_APPLICATION_NAME: rest-api-server
-      - CODE_DEPLOY_GROUP_NAME: rest-api-server-group
-      - APP_DIR: .
     docker:
-      - image: innovatorjapan/awscli:latest
+      - image: circleci/python:3.7.1
+    working_directory: /home/circleci/project/rest_api_project
     steps:
-      - attach_workspace:
-          at: .
+      - checkout
       - run:
-          name: aws-s3-deploy
+          name: pip install awscli
+          command: sudo pip install awscli
+      - run:
+          name: do deploy script
           command: |
-            which python
-            sh /bin/aws-s3-deploy
+            sudo chmod +x ./deploy_script.sh
+            sh ./deploy_script.sh
+    # working_directory: /home/circleci/project/rest_api_project
+    # environment:
+    #   - AWS_DEFAULT_REGION: ap-northeast-1
+    #   - CODE_DEPLOY_S3_BUCKET_NAME: rest-api-server
+    #   - CODE_DEPLOY_APPLICATION_NAME: rest-api-server
+    #   - CODE_DEPLOY_GROUP_NAME: rest-api-server-group
+    #   - APP_DIR: .
+    # docker:
+    #   - image: innovatorjapan/awscli:latest
+    # steps:
+    #   - attach_workspace:
+    #       at: .
+      # - run:
+    #       name: aws-s3-deploy
+    #       command: |
+    #         which python
+    #         sh /bin/aws-s3-deploy
 
 workflows:
   version: 2
@@ -78,6 +91,6 @@ workflows:
       - deploy:
           requires:
             - build
-          filters:
-            branches:
-              only: master
+          # filters:
+          #   branches:
+          #     only: master
