@@ -58,6 +58,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: pip install awscli
+          command: pip install awscli
+      - run:
           name: do deploy script
           command: |
             sudo chmod +x ./deploy_script.sh
