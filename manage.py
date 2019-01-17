@@ -7,7 +7,7 @@ if __name__ == "__main__":
     if os.environ.get('DJANGO_SETTINGS'):
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings{}".format(os.environ.get('DJANGO_SETTINGS')))
     else:
-        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings")
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings.dev")
 
     try:
         from django.core.management import execute_from_command_line

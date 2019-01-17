@@ -15,6 +15,6 @@ from django.core.wsgi import get_wsgi_application
 if os.environ.get('DJANGO_SETTINGS'):
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings{}".format(os.environ.get('DJANGO_SETTINGS')))
 else:
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings.dev")
 
 application = get_wsgi_application()
