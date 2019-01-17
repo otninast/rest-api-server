@@ -40,7 +40,7 @@ jobs:
           destination: test-reports
 
   deploy:
-    working_directory: ~/repo
+    working_directory: /home/circleci/project/rest_api_project
     environment:
       - AWS_DEFAULT_REGION: ap-northeast-1
       - CODE_DEPLOY_S3_BUCKET_NAME: rest-api-server
