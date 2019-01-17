@@ -46,10 +46,10 @@ jobs:
       #       deactivate
       #       which python
 
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
+      # - persist_to_workspace:
+      #     root: .
+      #     paths:
+      #       - .
 
   deploy:
     docker:
