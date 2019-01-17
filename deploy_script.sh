@@ -7,8 +7,6 @@ S3_BUCKET="rest-api-server"
 TAG=`date '+%Y%m%d%H%M'`
 S3_KEY=dev/${APP_NAME}_$TAG.zip
 
-echo ${REGION}
-
 
 echo "#### create CodeDeploy revision: ${S3_KEY}"
 
@@ -30,3 +28,5 @@ aws deploy create-deployment --region ${REGION} --application-name ${APP_NAME} \
     --deployment-group-name ${DEPLOYMENT_GROUP} --deployment-config-name ${DEPLOYMENT_CONFIG}
 
 echo ""
+
+echo $ETAG
