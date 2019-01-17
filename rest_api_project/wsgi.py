@@ -8,12 +8,13 @@ https://docs.djangoproject.com/en/2.0/howto/deployment/wsgi/
 """
 
 import os
-
 from django.core.wsgi import get_wsgi_application
+import pymysql
+pymysql.install_as_MySQLdb()
 
 # os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings.prod")
-if os.environ.get('DJANGO_SETTINGS'):
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings{}".format(os.environ.get('DJANGO_SETTINGS')))
+if os.environ.get('RDS_USER'):
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings.prod")
 else:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings.dev")
 
