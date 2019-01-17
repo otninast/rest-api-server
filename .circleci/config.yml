@@ -39,6 +39,11 @@ jobs:
           path: test-reports
           destination: test-reports
 
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
   deploy:
     working_directory: /home/circleci/project/rest_api_project
     environment:
