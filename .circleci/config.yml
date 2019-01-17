@@ -65,10 +65,10 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-        name: aws-s3-deploy
-        command: |
-          which python
-          sh /bin/aws-s3-deploy
+          name: aws-s3-deploy
+          command: |
+            which python
+            sh /bin/aws-s3-deploy
 
 workflows:
   version: 2
