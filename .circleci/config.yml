@@ -43,7 +43,7 @@ jobs:
           name: deactivate
           command: |
             which python
-            . deactivate
+            deactivate
             which python
 
       - persist_to_workspace:
