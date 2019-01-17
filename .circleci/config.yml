@@ -25,10 +25,10 @@ jobs:
           command: |
             sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages/
             sudo chown -R circleci:circleci /usr/local/bin
-      - run:
-          name: pip install
-          command: |
-            pip install -r requirements.txt
+      # - run:
+      #     name: pip install
+      #     command: |
+      #       pip install -r requirements.txt
       - run:
           name: run test
           command: |
