@@ -30,7 +30,7 @@ ETAG=`aws deploy list-application-revisions \
         --s-3-key-prefix ${S3_KEY} \
         --query 'revisions[0].s3Location.eTag' \
         --output text` \
-        --debug
+        # --debug
 
 echo "eTag------------>>>>>>>>:  ${ETAG}"
 
@@ -39,9 +39,9 @@ ETAG2=`aws deploy list-application-revisions \
         --application-name ${APP_NAME} \
         --s-3-bucket ${S3_BUCKET} \
         --s-3-key-prefix ${S3_KEY} \
-        --query 'revisions[1].s3Location.eTag' \
-        --output text` \
-        --debug
+        --query 'revisions' \
+        --output json` \
+        # --debug
 
 echo "eTag2------------>>>>>>>>:  ${ETAG2}"
 
