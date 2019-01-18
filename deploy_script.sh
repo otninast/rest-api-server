@@ -4,8 +4,8 @@ APP_NAME="rest-api-server"
 DEPLOYMENT_GROUP="rest-api-server-group"
 DEPLOYMENT_CONFIG="CodeDeployDefault.AllAtOnce"
 S3_BUCKET="rest-api-server"
-# TAG=`date '+%Y%m%d%H%M'`
-TAG="deploy-revision"
+TAG=`date '+%Y%m%d%H%M'`
+# TAG="deploy-revision"
 # S3_KEY=dev/${APP_NAME}_$TAG.zip
 S3_KEY=${APP_NAME}_$TAG.zip
 
@@ -40,7 +40,7 @@ ETAG2=`aws deploy list-application-revisions \
         --s-3-bucket ${S3_BUCKET} \
         --s-3-key-prefix ${S3_KEY} \
         --query 'revisions' \
-        --output text` \
+        --output json` \
         # --debug
 
 echo "eTag2------------>>>>>>>>:  ${ETAG2}"
