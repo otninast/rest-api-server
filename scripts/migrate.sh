@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 cd /home/ec2-user/rest-api-server
-python manage.py makemigrations
-python manage.py migrate
+python3 manage.py makemigrations
+python3 manage.py migrate
 
 # source /home/ec2-user/www/project-venv/bin/activate
 # DJANGO_SETTINGS_MODULE=project.settings.staging \

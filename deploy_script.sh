@@ -4,7 +4,8 @@ APP_NAME="rest-api-server"
 DEPLOYMENT_GROUP="rest-api-server-group"
 DEPLOYMENT_CONFIG="CodeDeployDefault.AllAtOnce"
 S3_BUCKET="rest-api-server"
-TAG=`date '+%Y%m%d%H%M'`
+# TAG=`date '+%Y%m%d%H%M'`
+TAG=`date`
 # S3_KEY=dev/${APP_NAME}_$TAG.zip
 S3_KEY=${APP_NAME}_$TAG.zip
 
@@ -29,9 +30,20 @@ ETAG=`aws deploy list-application-revisions \
         --s-3-key-prefix ${S3_KEY} \
         --query 'revisions[0].s3Location.eTag' \
         --output text` \
-        # --debug
+        --debug
 
+echo "eTag------------>>>>>>>>:  ${ETAG}"
 
+ETAG2=`aws deploy list-application-revisions \
+        --region ${REGION} \
+        --application-name ${APP_NAME} \
+        --s-3-bucket ${S3_BUCKET} \
+        --s-3-key-prefix ${S3_KEY} \
+        --query 'revisions[1].s3Location.eTag' \
+        --output text` \
+        --debug
+
+echo "eTag2------------>>>>>>>>:  ${ETAG2}"
 
 aws deploy create-deployment \
         --region ${REGION} \
@@ -41,6 +53,4 @@ aws deploy create-deployment \
         --deployment-config-name ${DEPLOYMENT_CONFIG} \
         # --debug
 
-# echo ""
-
-echo ${ETAG}
+echo ""
