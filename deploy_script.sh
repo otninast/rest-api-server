@@ -34,16 +34,16 @@ ETAG=`aws deploy list-application-revisions \
 
 echo "eTag------------>>>>>>>>:  ${ETAG}"
 
-ETAG2=`aws deploy list-application-revisions \
-        --region ${REGION} \
-        --application-name ${APP_NAME} \
-        --s-3-bucket ${S3_BUCKET} \
-        --s-3-key-prefix ${S3_KEY} \
-        --query 'revisions' \
-        --output json` \
-        # --debug
-
-echo "eTag2------------>>>>>>>>:  ${ETAG2}"
+# ETAG2=`aws deploy list-application-revisions \
+#         --region ${REGION} \
+#         --application-name ${APP_NAME} \
+#         --s-3-bucket ${S3_BUCKET} \
+#         --s-3-key-prefix ${S3_KEY} \
+#         --query 'revisions' \
+#         --output json` \
+#         # --debug
+#
+# echo "eTag2------------>>>>>>>>:  ${ETAG2}"
 
 aws deploy create-deployment \
         --region ${REGION} \
