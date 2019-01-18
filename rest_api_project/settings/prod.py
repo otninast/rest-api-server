@@ -19,7 +19,7 @@ ALLOWED_HOSTS = ['*']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'rest-api-mysql',
+        'NAME': 'restapidb',
         'USER': os.environ.get('RDS_USER'),
         'PASSWORD': os.environ.get('RDS_PASSWORD'),
         'HOST': os.environ.get('RDS_HOST'),
