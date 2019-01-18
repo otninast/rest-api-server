@@ -11,20 +11,13 @@ permissions:
 hooks:
   ApplicationStop:
     - location: scripts/application_stop.sh
-      timeout: 300
       runas: ec2-user
   BeforeInstall:
     - location: scripts/clean_instance.sh
-      timeout: 300
       runas: root
   AfterInstall:
-    # - location: scripts/install_python_dependencies.sh
-    #   timeout: 300
-    #   runas: ec2-user
     - location: scripts/migrate.sh
-      timeout: 300
       runas: ec2-user
   ApplicationStart:
     - location: scripts/start_application.sh
-      timeout: 300
       runas: ec2-user
