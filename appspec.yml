@@ -3,3 +3,28 @@ os: linux
 files:
   - source: /
     destination: /home/ec2-user/codedeploy_test
+permissions:
+  - object: /home/ec2-user/codedeploy_test
+    pattern: "**"
+    owner: ec2-user
+    group: ec2-user
+hooks:
+  ApplicationStop:
+    - location: deploy_scripts/application_stop.sh
+      timeout: 300
+      runas: root
+  BeforeInstall:
+    - location: deploy_scripts/clean_instance.sh
+      timeout: 300
+      runas: root
+  AfterInstall:
+    # - location: scripts/install_python_dependencies.sh
+    #   timeout: 300
+    #   runas: ec2-user
+    - location: scripts/migrate.sh
+      timeout: 300
+      runas: ec2-user
+  ApplicationStart:
+    - location: scripts/start_application.sh
+      timeout: 300
+      runas: ec2-user
