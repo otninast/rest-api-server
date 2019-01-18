@@ -2,9 +2,9 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ec2-user/codedeploy_test
+    destination: /home/ec2-user/rest-api-server
 permissions:
-  - object: /home/ec2-user/codedeploy_test
+  - object: /home/ec2-user/rest-api-server
     pattern: "**"
     owner: ec2-user
     group: ec2-user
