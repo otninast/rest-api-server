@@ -5,7 +5,8 @@ DEPLOYMENT_GROUP="rest-api-server-group"
 DEPLOYMENT_CONFIG="CodeDeployDefault.AllAtOnce"
 S3_BUCKET="rest-api-server"
 TAG=`date '+%Y%m%d%H%M'`
-S3_KEY=dev/${APP_NAME}_$TAG.zip
+# S3_KEY=dev/${APP_NAME}_$TAG.zip
+S3_KEY=${APP_NAME}_$TAG.zip
 
 
 echo "#### create CodeDeploy revision: ${S3_KEY}"
