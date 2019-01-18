@@ -40,7 +40,7 @@ ETAG2=`aws deploy list-application-revisions \
         --s-3-bucket ${S3_BUCKET} \
         --s-3-key-prefix ${S3_KEY} \
         --query 'revisions' \
-        --output json` \
+        --output text` \
         # --debug
 
 echo "eTag2------------>>>>>>>>:  ${ETAG2}"
