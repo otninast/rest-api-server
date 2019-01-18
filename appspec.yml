@@ -18,6 +18,6 @@ hooks:
   AfterInstall:
     - location: scripts/migrate.sh
       runas: ec2-user
-  ApplicationStart:
-    - location: scripts/start_application.sh
-      runas: ec2-user
+  # ApplicationStart:
+  #   - location: scripts/start_application.sh
+  #     runas: ec2-user

@@ -2,7 +2,7 @@
 cd /home/ec2-user/rest-api-server
 python3 manage.py makemigrations
 python3 manage.py migrate
-
+gunicorn --daemon -c gunicorn.conf rest_api_project.wsgi:application --log-file -
 # source /home/ec2-user/www/project-venv/bin/activate
 # DJANGO_SETTINGS_MODULE=project.settings.staging \
 # SECRET_KEY=your-secret-here \
