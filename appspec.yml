@@ -12,7 +12,7 @@ hooks:
   ApplicationStop:
     - location: scripts/application_stop.sh
       timeout: 300
-      runas: root
+      runas: ec2-user
   BeforeInstall:
     - location: scripts/clean_instance.sh
       timeout: 300
