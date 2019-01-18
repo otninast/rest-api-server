@@ -51,7 +51,7 @@ aws deploy create-deployment \
         --s3-location bucket=${S3_BUCKET},key=${S3_KEY},bundleType=zip,eTag=${ETAG} \
         --deployment-group-name ${DEPLOYMENT_GROUP} \
         --deployment-config-name ${DEPLOYMENT_CONFIG} \
-        --ignore-application-stop-failures \
+        # --ignore-application-stop-failures \
         # --debug
 
 echo ""
