@@ -9,8 +9,14 @@ python -V
 
 python3 manage.py makemigrations
 python3 manage.py migrate
-# /home/ec2-user/.local/bin/gunicorn --daemon -c gunicorn.conf rest_api_project.wsgi:application --log-file -
-/home/ec2-user/.local/bin/gunicorn  -c gunicorn.conf rest_api_project.wsgi:application --log-file -
+
+python3 -m venv deployenv
+source deployenv/bin/activate
+
+python -V
+pwd
+/home/ec2-user/.local/bin/gunicorn --daemon -c gunicorn.conf rest_api_project.wsgi:application --log-file -
+# /home/ec2-user/.local/bin/gunicorn  -c gunicorn.conf rest_api_project.wsgi:application --log-file -
 
 echo "---------- finish migrate -------------"
 # source /home/ec2-user/www/project-venv/bin/activate
