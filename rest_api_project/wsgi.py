@@ -13,7 +13,7 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 # os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings.prod")
-if os.environ.get('USER') == os.environ.get('DEPLOY_USER'):
+if os.environ.get('RDS_USER'):
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings.prod")
 else:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rest_api_project.settings.dev")
