@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 echo "---------- start migrate -------------"
 
-
+source /home/ec2-user/.bash_profile
+echo ${USER}
+echo ${RDS_USER}
 cd /home/ec2-user/rest-api-server
+
 
 pwd
 python -V
@@ -20,7 +23,7 @@ echo "create env"
 source deployenv/bin/activate
 
 python -V
-ls
+# ls
 # pwd
 /home/ec2-user/.local/bin/gunicorn --daemon -c gunicorn.conf rest_api_project.wsgi:application --log-file -
 
