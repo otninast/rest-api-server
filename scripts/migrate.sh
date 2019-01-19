@@ -10,13 +10,18 @@ python -V
 python3 manage.py makemigrations
 python3 manage.py migrate
 
-who
-sudo chmod +w /home/ec2-user/rest-api-server
+# who
+# sudo chmod +w /home/ec2-user/rest-api-server
+sudo chown ec2-user:ec2-user ~/rest-api-server
+echo "change owner"
 python3 -m venv deployenv
+# sudo chmod +x /home/ec2-user/rest-api-server/deployenv/bin/activate
+echo "create env"
 source deployenv/bin/activate
 
 python -V
-pwd
+ls
+# pwd
 /home/ec2-user/.local/bin/gunicorn --daemon -c gunicorn.conf rest_api_project.wsgi:application --log-file -
 
 pgrep gunicorn
