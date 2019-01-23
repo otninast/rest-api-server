@@ -10,6 +10,7 @@ cd /home/ec2-user/rest-api-server
 pwd
 python -V
 
+# python3 manage.py cllectstatic
 python3 manage.py makemigrations
 python3 manage.py migrate
 
@@ -25,9 +26,10 @@ source deployenv/bin/activate
 python -V
 # ls
 # pwd
+pkill -INT gunicorn
 /home/ec2-user/.local/bin/gunicorn --daemon -c gunicorn.conf rest_api_project.wsgi:application --log-file -
 
-pgrep gunicorn
+# pgrep gunicorn
 # /home/ec2-user/.local/bin/gunicorn  -c gunicorn.conf rest_api_project.wsgi:application --log-file -
 
 echo "---------- finish migrate -------------"
