@@ -15,7 +15,6 @@ class ImageTest(models.Model):
 
 
 class Profile(models.Model):
-
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     family_name = models.CharField('Family Name', max_length=30, null=True, blank=True)
     first_name = models.CharField('First Name', max_length=30, null=True, blank=True)
@@ -29,7 +28,6 @@ class Profile(models.Model):
 
 
 class MenuName(models.Model):
-
     menu_name = models.CharField('Training Menu Name', max_length=50)
 
     def __str__(self):
@@ -37,16 +35,15 @@ class MenuName(models.Model):
 
 
 class TrainingProgram(models.Model):
-
     username = models.ForeignKey(User, on_delete=models.CASCADE)
     training_date = models.DateField('Date of Training', default=timezone.now)
     daily_reflection = models.CharField(
         'Reflection for Training',
         max_length=1000, null=True, blank=True
         )
-    self_assessment_score = models.PositiveSmallIntegerField(
+    self_assessment_score = models.FloatField(
         'Your Training Score',
-        choices=utils.ONE_TO_FIVE_CHOICES,
+        # choices=utils.ONE_TO_FIVE_CHOICES,
         default=3
         )
     training_image = models.ImageField('Training Image', upload_to='image', null=True, blank=True)
@@ -56,7 +53,6 @@ class TrainingProgram(models.Model):
 
 
 class TrainingMenu(models.Model):
-
     training_program = models.ForeignKey(
                         TrainingProgram,
                         on_delete=models.CASCADE,
@@ -103,7 +99,6 @@ class TrainingMenu(models.Model):
 
 
 class ResultTime(models.Model):
-
     training_menu = models.ForeignKey(TrainingMenu, on_delete=models.CASCADE)
     num_of_order = models.PositiveSmallIntegerField()
     result_time = models.FloatField(null=True, default=None)
@@ -113,7 +108,6 @@ class ResultTime(models.Model):
 
 
 class LapTime(models.Model):
-
     result_time = models.ForeignKey(ResultTime, on_delete=models.CASCADE)
     num_of_lap = models.PositiveSmallIntegerField()
     lap_time = models.FloatField(null=True, default=None)

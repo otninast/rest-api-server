@@ -5,7 +5,7 @@ from rest_framework import (
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import api_view
 
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 import json
@@ -141,7 +141,6 @@ def DataInput(request):
                         "data": seri_training.data
                         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # else:
     training_program = seri_training.save()
     request_json['menuData']['training_program'] = training_program.id
     menu_name_str = request_json['menuData']['menu_name']
@@ -156,7 +155,6 @@ def DataInput(request):
                         "status_message": seri_menu.errors
                         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # else:
     training_menu = seri_menu.save()
 
     lap_time_list = []
@@ -168,8 +166,6 @@ def DataInput(request):
 
         lap_time_list.append(data['lapTime'])
 
-        # print('---------------->>>>>>>>>>>', [i['lap_time'] for i in data['lapTime']])
-
     seri_result = ResultTimeSerializer(
         data=request_json['resultTime'], many=True)
     # 複数を保存するための処理
@@ -180,35 +176,32 @@ def DataInput(request):
                         "status_message": seri_menu.errors
                         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # else:
-    # print(request_json)
     result_time = seri_result.save()
-    for lap_time_set, result_time_set in zip(lap_time_list, result_time):
-        # print('----------------------------------------')
-        # lap_time_set['result_time'] = result_time_set.id
-        # print(len(lap_time_set))
+    print('-------------->>>>>>>>>', type(lap_time_list), lap_time_list)
+    try:
+        for lap_time_set, result_time_set in zip(lap_time_list, result_time):
 
-        list(map(lambda x: x.update({'result_time': result_time_set.id}), lap_time_set))
-        list(map(lambda x: x.update({'lap_time': str_to_float(x['lap_time'])}), lap_time_set))
-        seri_lap = LapTimeSerializer(data=lap_time_set, many=True)
+            list(map(lambda x: x.update({'result_time': result_time_set.id}), lap_time_set))
+            list(map(lambda x: x.update({'lap_time': str_to_float(x['lap_time'])}), lap_time_set))
+            seri_lap = LapTimeSerializer(data=lap_time_set, many=True)
 
-        if not seri_lap.is_valid():
+            if not seri_lap.is_valid():
+                return Response({
+                                "status": "failure to save result time",
+                                "status_message": seri_lap.errors
+                                }, status=status.HTTP_400_BAD_REQUEST)
+            seri_lap.save()
+
             return Response({
-                            "status": "failure to save result time",
-                            "status_message": seri_lap.errors
-                            }, status=status.HTTP_400_BAD_REQUEST)
-        seri_lap.save()
-        # print(lap_time_set[0])
-        # print(result_time_set.id)
-    # print('---------------->>>>>>>>>>>', lap_time_list)
-    # print('>>>>>>>>>>>>>>>>>>>', result_time)
-
-
-    return Response({
+                        "status": "success",
+                        "status_message": "User Created Successfully"
+                        }, status=status.HTTP_200_OK)
+    except TypeError:
+        print('---------- ラップタイムは保存できませんでした。')
+        return Response({
                     "status": "success",
                     "status_message": "User Created Successfully"
                     }, status=status.HTTP_200_OK)
-
 
 @api_view(['GET'])
 def LoginUser(request):
@@ -262,63 +255,3 @@ def test_func(request):
     return Response({"status": "success",
                      "status_message": "User Created Successfully"
                      }, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
-
-#
-#
-# { "id": 5,
-#   "username": { "id": 1,
-#                 "username": "otninast" },
-#   "training_date": "2019-01-01",
-#   "daily_reflection": "@@@@@@@@",
-#   "self_assessment_score": 5,
-#   "training_image": "http://127.0.0.1:8000/image/image/temp_D5t5XS6.png",
-#   "training_menu": null
-#   }
-#
-#
-#   {
-#   "id": 5,
-#   "username": { "id": 1, "username": "otninast" },
-#   "training_date": "2019-01-01",
-#   "daily_reflection": "@@@@@@@@",
-#   "self_assessment_score": 5,
-#   "training_image": "http://127.0.0.1:8000/image/image/temp_D5t5XS6.png",
-#   "training_menu":
-#     [{
-#     "id": 39,
-#     "training_program": 5,
-#     "menu_name": { "id": 5, "menu_name": "All-Out" },
-#     "distance": 100,
-#     "style": "Fr",
-#     "time_circle": 60,
-#     "how_many_times": 3,
-#     "result_time":
-#         [{
-#         "id": 36,
-#         "training_menu": 39,
-#         "num_of_order": 1,
-#         "result_time": 60.8,
-#         "rap_time": []
-#         },
-#         {
-#         "id": 37,
-#         "training_menu": 39,
-#         "num_of_order": 2,
-#         "result_time": 63.7,
-#         "rap_time": []
-#         },
-#         { "id": 38,
-#         "training_menu": 39,
-#         "num_of_order": 3,
-#         "result_time": 62.09,
-#         "rap_time": []
-#         }
-#     ]}
-# ]}

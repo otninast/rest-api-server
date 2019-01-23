@@ -105,7 +105,6 @@ ONE_TO_SIXTY_CHOICE = [
 #
 #         return self.get_response(request)
 
-
 class AuthenticationMiddlewareJWT(MiddlewareMixin):
     """
     Middleware for auth django and jwt
@@ -168,6 +167,7 @@ def make_img_b64_from_dataframe(df):
     image = str(bs64)
     image = image[2:-1]
     img_html_tag = 'data:image/png;base64,{}'.format(image)
+    plt.close()
 
     return img_html_tag
 
