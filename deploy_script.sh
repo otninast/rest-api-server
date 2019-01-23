@@ -5,7 +5,9 @@ DEPLOYMENT_GROUP="rest-api-server-group"
 DEPLOYMENT_CONFIG="CodeDeployDefault.AllAtOnce"
 S3_BUCKET="rest-api-server"
 TAG=`date '+%Y%m%d%H%M'`
-S3_KEY=dev/${APP_NAME}_$TAG.zip
+# TAG="deploy-revision"
+# S3_KEY=dev/${APP_NAME}_$TAG.zip
+S3_KEY=${APP_NAME}_$TAG.zip
 
 
 echo "#### create CodeDeploy revision: ${S3_KEY}"
@@ -30,7 +32,18 @@ ETAG=`aws deploy list-application-revisions \
         --output text` \
         # --debug
 
+echo "eTag------------>>>>>>>>:  ${ETAG}"
 
+# ETAG2=`aws deploy list-application-revisions \
+#         --region ${REGION} \
+#         --application-name ${APP_NAME} \
+#         --s-3-bucket ${S3_BUCKET} \
+#         --s-3-key-prefix ${S3_KEY} \
+#         --query 'revisions' \
+#         --output json` \
+#         # --debug
+#
+# echo "eTag2------------>>>>>>>>:  ${ETAG2}"
 
 aws deploy create-deployment \
         --region ${REGION} \
@@ -38,8 +51,7 @@ aws deploy create-deployment \
         --s3-location bucket=${S3_BUCKET},key=${S3_KEY},bundleType=zip,eTag=${ETAG} \
         --deployment-group-name ${DEPLOYMENT_GROUP} \
         --deployment-config-name ${DEPLOYMENT_CONFIG} \
+        # --ignore-application-stop-failures \
         # --debug
 
-# echo ""
-
-echo ${ETAG}
+echo ""
