@@ -4,10 +4,9 @@ from rest_framework import serializers
 
 from . import models
 from .models import (
-TrainingMenu, TrainingProgram, MenuName, ResultTime, LapTime, ImageTest,
-Profile, Profile
+    TrainingMenu, TrainingProgram, MenuName, ResultTime, LapTime, ImageTest,
+    Profile, Profile
 )
-
 
 
 class ProfileSerializer_(serializers.ModelSerializer):
@@ -19,7 +18,6 @@ class ProfileSerializer_(serializers.ModelSerializer):
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     profile = ProfileSerializer_(read_only=True)
-
 
     class Meta:
         model = User
@@ -36,9 +34,9 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         user = User(**validated_data)
         user.save()
         user_instance = User.objects.get(username=username)
-        print('>>>>>>>>>>>>>>>', user_instance)
+        # print('>>>>>>>>>>>>>>>', user_instance)
         profile = Profile(user=user_instance)
-        print('>>>>>>>>>>>>>>>', profile)
+        # print('>>>>>>>>>>>>>>>', profile)
         profile.save()
         return user
 
@@ -166,7 +164,6 @@ class TrainingMenuSerializer(serializers.ModelSerializer):
         return obj.make_graph()
 
 
-
 class TrainingProgramSerializer(serializers.ModelSerializer):
     training_menu = serializers.SerializerMethodField()
     # username = UserSerializer()
@@ -219,8 +216,6 @@ class TrainingProgramSerializer(serializers.ModelSerializer):
         return TrainingProgram.objects.create(**validated_data)
 
 
-
-
 class ImageTestSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -230,7 +225,8 @@ class ImageTestSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), write_only=True)
 
     class Meta:
         model = Profile
