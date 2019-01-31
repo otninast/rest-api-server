@@ -33,7 +33,6 @@ INSTALLED_APPS += (
 
 static_path = os.environ.get('HOME')
 STATIC_ROOT = os.path.join(static_path, 'django_static')
-
 STATIC_URL = '/static/'
 
 MEDIA_ROOT = os.path.join(STATIC_ROOT, 'image')

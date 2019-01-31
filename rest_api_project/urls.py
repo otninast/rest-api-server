@@ -27,11 +27,6 @@ router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 
-# profile_list = views.ProfileViewSet.as_view({
-#     'get': 'list',
-#     'put': 'update'
-# })
-
 
 router.register(r'menu_name', views.MenuNameViewSet)
 router.register(r'training_program', views.TrainingProgramViewSet)
@@ -43,12 +38,12 @@ router.register(r'profile', views.ProfileViewSet)
 # router.register(r'test', views.test)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('adminsite/', admin.site.urls),
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('auth/', obtain_jwt_token),
     path('logout/', refresh_jwt_token),
-    path('datainput/', views.DataInput),
+    path('datainput/', views.DataInput, name='datainput'),
     path('login_user/', views.LoginUser),
     path('test_func/', views.test_func),
     # path('logout/', views.Logout.as_view()),

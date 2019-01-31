@@ -78,7 +78,6 @@ ONE_TO_SIXTY_CHOICE = [
 #         request.user = SimpleLazyObject(lambda: get_user_jwt(request))
 
 
-
 # from django.utils.functional import SimpleLazyObject
 # from rest_framework_jwt.serializers import VerifyJSONWebTokenSerializer
 # from rest_framework.exceptions import ValidationError
@@ -154,12 +153,40 @@ def b64_to_image(b64data):
     return data
 
 
-def make_img_b64_from_dataframe(df):
-    plt.style.use('ggplot')
+def make_img_b64_from_dataframe(df, laplist):
+    plt.style.use('seaborn-deep')
+    order = list(df.index+1)
 
-    fig = plt.figure(figsize=(9, 3))
-    ax = fig.add_subplot(111)
-    ax.plot(df.index + 1, df['time'])
+    fig = plt.figure(figsize=(10, 4))
+    ax1 = fig.add_subplot(111)
+    ax1.plot(df.index + 1, df['time'], 'ok-', label='Result Time')
+    # print(laplist)
+
+    if laplist[0]:
+        ax2 = ax1.twinx()
+        bar_width = 0.4 / (len(laplist[0])+1)
+        width_between_order = 0
+
+        for index in range(0, len(laplist)):
+            last_lap = df.time[index] - sum(laplist[index])
+            laplist[index].append(last_lap)
+
+        for index, lap in enumerate(zip(*laplist)):
+            ax2.bar([x+width_between_order for x in order], lap,
+                    label='lap time{}'.format(index+1), alpha=0.5, width=bar_width)
+            width_between_order += bar_width
+
+        ax2.set_ylim(min(laplist[0])/1.2, max(laplist[-1])*1.1)
+
+    ax1.set_xlim(min(order)-1, max(order)+1)
+
+    ax1.set_xticks(range(min(order)-1, max(order)+1, 1))
+
+    ax1.set_title('Result Time & Lap Time')
+    ax1.set_xlabel('Order')
+    ax1.set_ylabel('Time[sec]')
+    fig.legend()
+
     canvas = FigureCanvasAgg(fig)
     png_output = BytesIO()
     canvas.print_png(png_output)
@@ -172,10 +199,10 @@ def make_img_b64_from_dataframe(df):
     return img_html_tag
 
 
-def make_img(time_list):
+def make_img(time_list, laplist):
     # t = Result_Time.objects.filter(trainingmenu=self)
     # time_list = [i.time for i in t]
     df = pd.DataFrame({'time': time_list})
-    src_b64 = make_img_b64_from_dataframe(df)
+    src_b64 = make_img_b64_from_dataframe(df, laplist)
     # img = '<img src="{}" class="img-fluid img-thumbnail"/>'.format(img_tag)
     return src_b64

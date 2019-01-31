@@ -43,12 +43,13 @@ class ProfileViewSet(viewsets.ModelViewSet):
         # print('>>>>>>>>>>>>>>>>>', type(request.data['user']))
         if 'base64' in request.data['profile_image']:
             base64_data = request.data['profile_image']
-            request.data['profile_image'] = b64_to_image(request.data['profile_image'])
+            request.data['profile_image'] = b64_to_image(
+                request.data['profile_image'])
 
         serializer = self.get_serializer(data=request.data)
-        print('------------>>>>>>>>>>>',serializer)
+        print('------------>>>>>>>>>>>', serializer)
         serializer.is_valid(raise_exception=True)
-        print('------------>>>>>>>>>>>',serializer.validated_data)
+        print('------------>>>>>>>>>>>', serializer.validated_data)
         # print('------------>>>>>>>>>>>',serializer.errors)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -60,12 +61,13 @@ class ProfileViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if 'base64' in self.request.data['profile_image']:
             base64_data = self.request.data['profile_image']
-            self.request.data['profile_image'] = b64_to_image(self.request.data['profile_image'])
+            self.request.data['profile_image'] = b64_to_image(
+                self.request.data['profile_image'])
         else:
             self.request.data['profile_image'] = instance.profile_image
 
-
-        serializer = self.get_serializer(instance, data=self.request.data, partial=kwargs['partial'])
+        serializer = self.get_serializer(
+            instance, data=self.request.data, partial=kwargs['partial'])
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
@@ -122,86 +124,118 @@ class LapTimeViewSet(viewsets.ModelViewSet):
 def DataInput(request):
 
     request_json = json.loads(request.body)
-    if request_json['trainingData']['training_image']:
-        b64data = request_json['trainingData']['training_image']
-        image = b64_to_image(b64data)
 
-        request_json['trainingData']['training_image'] = image
+    program = save_training_program(request, request_json['trainingData'])
+    if program is False:
+        return Response({"status": "failure to save training detail",
+                         }, status=status.HTTP_400_BAD_REQUEST)
 
-    request_json['trainingData']['username'] = request.user.id
-    request_json['trainingData']['user_id'] = request.user.id
+    menudata = save_training_menu(request_json['menuData'], program)
+    if menudata is False:
+        return Response({"status": "failure to save training detail",
+                         }, status=status.HTTP_400_BAD_REQUEST)
 
-    seri_training = TrainingProgramSerializer(
-        data=request_json["trainingData"])
+    result, lap_time_list = save_result_time(
+        request_json['resultTime'], menudata)
+    if result is False:
+        return Response({"status": "failure to save training detail",
+                         }, status=status.HTTP_400_BAD_REQUEST)
 
-    if not seri_training.is_valid():
-        return Response({
-                        "status": "failure to save training",
-                        "status_message": seri_training.errors,
-                        "data": seri_training.data
-                        }, status=status.HTTP_400_BAD_REQUEST)
+    lap = save_lap_time(lap_time_list, result)
+    print(lap)
 
-    training_program = seri_training.save()
-    request_json['menuData']['training_program'] = training_program.id
-    menu_name_str = request_json['menuData']['menu_name']
-    menu_name_obj = models.MenuName.objects.filter(menu_name=menu_name_str)
-    request_json['menuData']['menu_name'] = menu_name_obj[0].id
-    request_json['menuData']['menu_name_id'] = menu_name_obj[0].id
-    seri_menu = TrainingMenuSerializer(data=request_json["menuData"])
+    return Response({"status": "success",
+                     "status_message": "Training includeing Laptime Created Successfully"
+                     }, status=status.HTTP_200_OK)
 
-    if not seri_menu.is_valid():
-        return Response({
-                        "status": "failure to save training detail",
-                        "status_message": seri_menu.errors
-                        }, status=status.HTTP_400_BAD_REQUEST)
 
-    training_menu = seri_menu.save()
-
-    lap_time_list = []
-
-    for data in request_json['resultTime']:
-
-        data['training_menu'] = training_menu.id
-        data['result_time'] = str_to_float(data['result_time_str'])
-
-        lap_time_list.append(data['lapTime'])
-
-    seri_result = ResultTimeSerializer(
-        data=request_json['resultTime'], many=True)
-    # 複数を保存するための処理
-
-    if not seri_result.is_valid():
-        return Response({
-                        "status": "failure to save result time",
-                        "status_message": seri_menu.errors
-                        }, status=status.HTTP_400_BAD_REQUEST)
-
-    result_time = seri_result.save()
-    print('-------------->>>>>>>>>', type(lap_time_list), lap_time_list)
+def save_training_program(request, program):
     try:
-        for lap_time_set, result_time_set in zip(lap_time_list, result_time):
+        if program['training_image']:
+            b64data = program['training_image']
+            image = b64_to_image(b64data)
+            program['training_image'] = image
 
-            list(map(lambda x: x.update({'result_time': result_time_set.id}), lap_time_set))
-            list(map(lambda x: x.update({'lap_time': str_to_float(x['lap_time'])}), lap_time_set))
-            seri_lap = LapTimeSerializer(data=lap_time_set, many=True)
+        program['username'] = request.user.id
+        program['user_id'] = request.user.id
 
-            if not seri_lap.is_valid():
-                return Response({
-                                "status": "failure to save result time",
-                                "status_message": seri_lap.errors
-                                }, status=status.HTTP_400_BAD_REQUEST)
-            seri_lap.save()
+        serializer_training = TrainingProgramSerializer(data=program)
 
-            return Response({
-                        "status": "success",
-                        "status_message": "User Created Successfully"
-                        }, status=status.HTTP_200_OK)
+        if not serializer_training.is_valid():
+            return False
+
+        training_program = serializer_training.save()
+
+        return training_program
+
+    except:
+        return False
+
+
+def save_training_menu(data, training_program):
+    try:
+        data['training_program'] = training_program.id
+        menu_name_str = data['menu_name']
+        menu_name_obj = models.MenuName.objects.filter(menu_name=menu_name_str)
+        data['menu_name'] = menu_name_obj[0].id
+        data['menu_name_id'] = menu_name_obj[0].id
+        serializer_menu = TrainingMenuSerializer(data=data)
+
+        if not serializer_menu.is_valid():
+            return False
+
+        training_menu = serializer_menu.save()
+
+        return training_menu
+
+    except:
+        return False
+
+
+def save_result_time(result, training_menu):
+    try:
+        lap_time_list = []
+        for data in result:
+            data['training_menu'] = training_menu.id
+            data['result_time'] = str_to_float(data['result_time_str'])
+            lap_time_list.append(data['lapTime'])
+
+        serializer_result = ResultTimeSerializer(data=result, many=True)
+
+        if not serializer_result.is_valid():
+            return False, False
+
+        result_time = serializer_result.save()
+        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        # print(lap_time_list)
+        return result_time, lap_time_list
+
+    except:
+        return False, False
+
+
+def save_lap_time(lap_time_list, result):
+
+    try:
+        for lap_time_set, result_time_set in zip(lap_time_list, result):
+
+            list(map(lambda x: x.update(
+                {'result_time': result_time_set.id}), lap_time_set))
+            list(map(lambda x: x.update(
+                {'lap_time': str_to_float(x['lap_time'])}), lap_time_set))
+            serializer_lap = LapTimeSerializer(data=lap_time_set, many=True)
+
+            if not serializer_lap.is_valid():
+                return '------ serializer invalid'
+
+            serializer_lap.save()
+
+        return '------- serializer valid!!!'
+
     except TypeError:
-        print('---------- ラップタイムは保存できませんでした。')
-        return Response({
-                    "status": "success",
-                    "status_message": "User Created Successfully"
-                    }, status=status.HTTP_200_OK)
+
+        return '------- could not save lap time'
+
 
 @api_view(['GET'])
 def LoginUser(request):
@@ -213,9 +247,10 @@ def LoginUser(request):
     # print('----------------->>>>>', models.Profile.objects.get(user=request.user))
 
     # if data['user']['profile'] is not None:
-    request_user_profile_instance = models.Profile.objects.get(user=request.user)
+    request_user_profile_instance = models.Profile.objects.get(
+        user=request.user)
     data['profile'] = ProfileSerializer(request_user_profile_instance).data
-        # print('Profile-----', data['profile'])
+    # print('Profile-----', data['profile'])
 
     # else:
     #     data['profile'] = {'birthday': None,
@@ -226,7 +261,6 @@ def LoginUser(request):
     #                         'style_one': None,
     #                         'user': request.user.id,
     #                         }
-
 
     return Response({
                     "data": data,
@@ -255,3 +289,91 @@ def test_func(request):
     return Response({"status": "success",
                      "status_message": "User Created Successfully"
                      }, status=status.HTTP_200_OK)
+
+
+# @csrf_exempt
+# @api_view(['POST'])
+# def DataInput_(request):
+#
+#     request_json = json.loads(request.body)
+#     if request_json['trainingData']['training_image']:
+#         b64data = request_json['trainingData']['training_image']
+#         image = b64_to_image(b64data)
+#         request_json['trainingData']['training_image'] = image
+#
+#     request_json['trainingData']['username'] = request.user.id
+#     request_json['trainingData']['user_id'] = request.user.id
+#
+#     seri_training = TrainingProgramSerializer(
+#         data=request_json["trainingData"])
+#
+#     if not seri_training.is_valid():
+#         return Response({
+#                         "status": "failure to save training",
+#                         "status_message": seri_training.errors,
+#                         "data": seri_training.data
+#                         }, status=status.HTTP_400_BAD_REQUEST)
+#
+#     training_program = seri_training.save()
+#     request_json['menuData']['training_program'] = training_program.id
+#     menu_name_str = request_json['menuData']['menu_name']
+#     menu_name_obj = models.MenuName.objects.filter(menu_name=menu_name_str)
+#     request_json['menuData']['menu_name'] = menu_name_obj[0].id
+#     request_json['menuData']['menu_name_id'] = menu_name_obj[0].id
+#     seri_menu = TrainingMenuSerializer(data=request_json["menuData"])
+#
+#     if not seri_menu.is_valid():
+#         return Response({
+#                         "status": "failure to save training detail",
+#                         "status_message": seri_menu.errors
+#                         }, status=status.HTTP_400_BAD_REQUEST)
+#
+#     training_menu = seri_menu.save()
+#
+#     lap_time_list = []
+#
+#     for data in request_json['resultTime']:
+#
+#         data['training_menu'] = training_menu.id
+#         data['result_time'] = str_to_float(data['result_time_str'])
+#
+#         lap_time_list.append(data['lapTime'])
+#
+#     seri_result = ResultTimeSerializer(
+#         data=request_json['resultTime'], many=True)
+#     # 複数を保存するための処理
+#
+#     if not seri_result.is_valid():
+#         return Response({
+#                         "status": "failure to save result time",
+#                         "status_message": seri_menu.errors
+#                         }, status=status.HTTP_400_BAD_REQUEST)
+#
+#     result_time = seri_result.save()
+#     # print('-------------->>>>>>>>>', type(lap_time_list), lap_time_list)
+#     try:
+#         for lap_time_set, result_time_set in zip(lap_time_list, result_time):
+#
+#             list(map(lambda x: x.update(
+#                 {'result_time': result_time_set.id}), lap_time_set))
+#             list(map(lambda x: x.update(
+#                 {'lap_time': str_to_float(x['lap_time'])}), lap_time_set))
+#             seri_lap = LapTimeSerializer(data=lap_time_set, many=True)
+#
+#             if not seri_lap.is_valid():
+#                 return Response({
+#                                 "status": "failure to save result time",
+#                                 "status_message": seri_lap.errors
+#                                 }, status=status.HTTP_400_BAD_REQUEST)
+#             seri_lap.save()
+#
+#             return Response({
+#                         "status": "success",
+#                         "status_message": "User Created Successfully"
+#                         }, status=status.HTTP_200_OK)
+#     except TypeError:
+#         print('---------- ラップタイムは保存できませんでした。')
+#         return Response({
+#                     "status": "success",
+#                     "status_message": "User Created Successfully"
+#                     }, status=status.HTTP_200_OK)
