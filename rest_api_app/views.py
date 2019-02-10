@@ -96,9 +96,26 @@ class MenuNameViewSet(viewsets.ModelViewSet):
 class TrainingProgramViewSet(viewsets.ModelViewSet):
 
     queryset = models.TrainingProgram.objects.all().order_by('-training_date')
-    serializer_class = serializers.TrainingProgramSerializer
+    serializer_class = TrainingProgramSerializer
     authentication_classes = (JSONWebTokenAuthentication,)
-    lookup_field = 'pk'
+    # lookup_field = 'pk'
+
+    def get_queryset(self):
+        queryset = models.TrainingProgram.objects.all()
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        # print('-------------------------------------')
+        # qs_ = queryset
+        # t_m_l = [list(a.trainingmenus.values())[0] for a in qs_]
+        # t_m = [a.trainingmenus for a in qs_]
+        # qs = [a.values('resulttimes') for a in t_m]
+        #
+        # print('viewset', qs)
+        # # print('[0]', qs[0])
+        # print('type', type(qs))
+        # print('dir', dir(qs))
+        # print(dir(self))
+        # print('-------------------------------------')
+        return queryset
 
 
 class TrainingMenuViewSet(viewsets.ModelViewSet):
@@ -106,11 +123,21 @@ class TrainingMenuViewSet(viewsets.ModelViewSet):
     queryset = models.TrainingMenu.objects.all()
     serializer_class = serializers.TrainingMenuSerializer
 
+    def get_queryset(self):
+        queryset = models.TrainingMenu.objects.all()
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
+
 
 class ResultTimeViewSet(viewsets.ModelViewSet):
 
     queryset = models.ResultTime.objects.all()
     serializer_class = serializers.ResultTimeSerializer
+
+    def get_queryset(self):
+        queryset = models.ResultTime.objects.all()
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
 
 
 class LapTimeViewSet(viewsets.ModelViewSet):
@@ -126,6 +153,7 @@ def DataInput(request):
     request_json = json.loads(request.body)
 
     program = save_training_program(request, request_json['trainingData'])
+
     if program is False:
         return Response({"status": "failure to save training detail",
                          }, status=status.HTTP_400_BAD_REQUEST)
@@ -142,7 +170,6 @@ def DataInput(request):
                          }, status=status.HTTP_400_BAD_REQUEST)
 
     lap = save_lap_time(lap_time_list, result)
-    print(lap)
 
     return Response({"status": "success",
                      "status_message": "Training includeing Laptime Created Successfully"
@@ -289,91 +316,3 @@ def test_func(request):
     return Response({"status": "success",
                      "status_message": "User Created Successfully"
                      }, status=status.HTTP_200_OK)
-
-
-# @csrf_exempt
-# @api_view(['POST'])
-# def DataInput_(request):
-#
-#     request_json = json.loads(request.body)
-#     if request_json['trainingData']['training_image']:
-#         b64data = request_json['trainingData']['training_image']
-#         image = b64_to_image(b64data)
-#         request_json['trainingData']['training_image'] = image
-#
-#     request_json['trainingData']['username'] = request.user.id
-#     request_json['trainingData']['user_id'] = request.user.id
-#
-#     seri_training = TrainingProgramSerializer(
-#         data=request_json["trainingData"])
-#
-#     if not seri_training.is_valid():
-#         return Response({
-#                         "status": "failure to save training",
-#                         "status_message": seri_training.errors,
-#                         "data": seri_training.data
-#                         }, status=status.HTTP_400_BAD_REQUEST)
-#
-#     training_program = seri_training.save()
-#     request_json['menuData']['training_program'] = training_program.id
-#     menu_name_str = request_json['menuData']['menu_name']
-#     menu_name_obj = models.MenuName.objects.filter(menu_name=menu_name_str)
-#     request_json['menuData']['menu_name'] = menu_name_obj[0].id
-#     request_json['menuData']['menu_name_id'] = menu_name_obj[0].id
-#     seri_menu = TrainingMenuSerializer(data=request_json["menuData"])
-#
-#     if not seri_menu.is_valid():
-#         return Response({
-#                         "status": "failure to save training detail",
-#                         "status_message": seri_menu.errors
-#                         }, status=status.HTTP_400_BAD_REQUEST)
-#
-#     training_menu = seri_menu.save()
-#
-#     lap_time_list = []
-#
-#     for data in request_json['resultTime']:
-#
-#         data['training_menu'] = training_menu.id
-#         data['result_time'] = str_to_float(data['result_time_str'])
-#
-#         lap_time_list.append(data['lapTime'])
-#
-#     seri_result = ResultTimeSerializer(
-#         data=request_json['resultTime'], many=True)
-#     # 複数を保存するための処理
-#
-#     if not seri_result.is_valid():
-#         return Response({
-#                         "status": "failure to save result time",
-#                         "status_message": seri_menu.errors
-#                         }, status=status.HTTP_400_BAD_REQUEST)
-#
-#     result_time = seri_result.save()
-#     # print('-------------->>>>>>>>>', type(lap_time_list), lap_time_list)
-#     try:
-#         for lap_time_set, result_time_set in zip(lap_time_list, result_time):
-#
-#             list(map(lambda x: x.update(
-#                 {'result_time': result_time_set.id}), lap_time_set))
-#             list(map(lambda x: x.update(
-#                 {'lap_time': str_to_float(x['lap_time'])}), lap_time_set))
-#             seri_lap = LapTimeSerializer(data=lap_time_set, many=True)
-#
-#             if not seri_lap.is_valid():
-#                 return Response({
-#                                 "status": "failure to save result time",
-#                                 "status_message": seri_lap.errors
-#                                 }, status=status.HTTP_400_BAD_REQUEST)
-#             seri_lap.save()
-#
-#             return Response({
-#                         "status": "success",
-#                         "status_message": "User Created Successfully"
-#                         }, status=status.HTTP_200_OK)
-#     except TypeError:
-#         print('---------- ラップタイムは保存できませんでした。')
-#         return Response({
-#                     "status": "success",
-#                     "status_message": "User Created Successfully"
-#                     }, status=status.HTTP_200_OK)

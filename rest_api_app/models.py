@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Prefetch
 from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import (
@@ -45,7 +46,7 @@ class TrainingProgram(models.Model):
     training_date = models.DateField('Date of Training', default=timezone.now)
     daily_reflection = models.CharField(
         'Reflection for Training',
-        max_length=1000, null=True, blank=True)
+        max_length=5000, null=True, blank=True)
     self_assessment_score = models.FloatField(
         'Your Training Score', default=3)
     training_image = models.ImageField(
@@ -59,7 +60,7 @@ class TrainingMenu(models.Model):
     training_program = models.ForeignKey(
                         TrainingProgram,
                         on_delete=models.CASCADE,
-                        related_name='TrainingProgram')
+                        related_name='trainingmenus')
     menu_name = models.ForeignKey(MenuName, on_delete=models.CASCADE)
     distance = models.PositiveSmallIntegerField(
                         'Distance for the Training Menu',
@@ -79,14 +80,46 @@ class TrainingMenu(models.Model):
 
     def get_result_time_list(self):
         # print('-----------------')
-        result_time_instance_list = ResultTime.objects.filter(
-            training_menu=self)
+        # result_time_instance_list = ResultTime.objects.filter(
+        #     training_menu=self)
+        result_time_instance_list = ResultTime.objects.filter(training_menu=self).prefetch_related(
+            Prefetch(
+                'laptimes',
+                queryset=LapTime.objects.all()))
+        # result_time_instance_list = ResultTime.objects.filter(
+        #     training_menu=self).prefetch_related('laptimes')
+        # print(ResultTime.objects.filter(training_menu=self).query)
+        # print('^^^^^^^^^^^^^^^^^')
+        # for result in result_time_instance_list:
+        #     print('---------------------------------------------')
+        #     print(result)
+        #     # print('2', result.result_time)
+        #     print('laptime', result.laptimes)
+        #     print('all', result.laptimes.all())
+        #     print('values', result.laptimes.values())
+        #     print('------------------@@@@@@@@@@@@----------------')
+
         result_time_list = [
             result_time_instance.result_time for result_time_instance in result_time_instance_list]
-        # print(result_time_list)
-        lap_time_list = [
-            result_time_instance.get_lap_time_list() for result_time_instance in result_time_instance_list]
-        # print(lap_time_list)
+
+        # lap_time_list = [
+        #     result_time_instance.get_lap_time_list() for result_time_instance in result_time_instance_list]
+
+        lap_time_list = [list(instance.laptimes.values_list('lap_time', flat=True))
+                         for instance in result_time_instance_list]
+        # print("------------------------")
+        # print('new', lapn)
+        # print('old', lap_time_list)
+        # print("------------------------")
+        # lapnn = [x for x in lapn]
+        # print('------------------')
+        # print(lapnn)
+        # print('------------------')
+        # print('@@@@@@@@@@@')
+        # print('time', result_time_list)
+        # print('lap', lap_time_list)
+        # print('@@@@@@@@@@@@')
+
         return result_time_list, lap_time_list
 
     def get_mean_time(self):
@@ -103,6 +136,10 @@ class TrainingMenu(models.Model):
 
     def make_graph(self):
         time_list, lap_list = self.get_result_time_list()
+        # print('@@@@@@@@@@@')
+        # print('time', time_list)
+        # print('lap', lap_list)
+        # print('@@@@@@@@@@@@')
 
         # print(lap_list)
         b64_graph = utils.make_img(time_list, lap_list)
@@ -110,7 +147,8 @@ class TrainingMenu(models.Model):
 
 
 class ResultTime(models.Model):
-    training_menu = models.ForeignKey(TrainingMenu, on_delete=models.CASCADE)
+    training_menu = models.ForeignKey(
+        TrainingMenu, on_delete=models.CASCADE, related_name="resulttimes")
     num_of_order = models.PositiveSmallIntegerField()
     result_time = models.FloatField(null=True, default=None)
 
@@ -121,13 +159,14 @@ class ResultTime(models.Model):
         return lap_time_list
 
     def __str__(self):
-        return '{} {}'.format(self.training_menu, self.num_of_order)
+        return '{} --> Order.{} Time:{}'.format(self.training_menu, self.num_of_order, self.result_time)
 
 
 class LapTime(models.Model):
-    result_time = models.ForeignKey(ResultTime, on_delete=models.CASCADE)
+    result_time = models.ForeignKey(
+        ResultTime, on_delete=models.CASCADE, related_name="laptimes")
     num_of_lap = models.PositiveSmallIntegerField()
     lap_time = models.FloatField(null=True, default=None)
 
     def __str__(self):
-        return '{}{}'.format(self.result_time, self.num_of_lap)
+        return '{} --> Lap Order.{}'.format(self.result_time, self.num_of_lap)

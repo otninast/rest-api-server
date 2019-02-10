@@ -3,10 +3,12 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 
 from . import models
+from . import utils
 from .models import (
     TrainingMenu, TrainingProgram, MenuName, ResultTime, LapTime, ImageTest,
     Profile, Profile
 )
+from statistics import mean
 
 
 class ProfileSerializer_(serializers.ModelSerializer):
@@ -66,7 +68,13 @@ class LapTimeSerializer(serializers.ModelSerializer):
 
 class ResultTimeSerializer(serializers.ModelSerializer):
 
-    lap_time = serializers.SerializerMethodField()
+    # lap_time = serializers.SerializerMethodField()
+    lap_time = LapTimeSerializer(read_only=True, many=True, source='laptimes')
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        queryset = queryset.prefetch_related('laptimes')
+        return queryset
 
     class Meta:
         model = models.ResultTime
@@ -89,7 +97,6 @@ class ResultTimeSerializer(serializers.ModelSerializer):
 
         except:
             lap_time_abstruct_contents = None
-
             return lap_time_abstruct_contents
 
 
@@ -100,12 +107,20 @@ class TrainingMenuSerializer(serializers.ModelSerializer):
                             queryset=MenuName.objects.all(),
                             write_only=True
                             )
-    result_time = serializers.SerializerMethodField()
+    # result_time = serializers.SerializerMethodField()
+    result_time = ResultTimeSerializer(
+        read_only=True, many=True, source='resulttimes')
 
     mean_time = serializers.SerializerMethodField()
     max_time = serializers.SerializerMethodField()
     min_time = serializers.SerializerMethodField()
     graph = serializers.SerializerMethodField()
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        queryset = queryset.prefetch_related(
+            'resulttimes', 'resulttimes__laptimes')
+        return queryset
 
     class Meta:
         model = TrainingMenu
@@ -141,8 +156,6 @@ class TrainingMenuSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['menu_name'] = validated_data.get('menu_name_id', None)
-        # print('-------------------------')
-        # print(validated_data)
 
         if validated_data['menu_name'] is None:
             raise serializers.ValidationError('menu name not found.')
@@ -152,20 +165,47 @@ class TrainingMenuSerializer(serializers.ModelSerializer):
         return TrainingMenu.objects.create(**validated_data)
 
     def get_mean_time(self, obj):
-        return obj.get_mean_time()
+        timelist = list(obj.resulttimes.values_list('result_time', flat=True))
+        mean_time = round(mean(timelist), 2)
+        return mean_time
 
     def get_max_time(self, obj):
-        return obj.get_max_time()
+        timelist = list(obj.resulttimes.values_list('result_time', flat=True))
+        max_time = max(timelist)
+        return max_time
 
     def get_min_time(self, obj):
-        return obj.get_min_time()
+        timelist = list(obj.resulttimes.values_list('result_time', flat=True))
+        min_time = min(timelist)
+        return min_time
 
     def get_graph(self, obj):
-        return obj.make_graph()
+        # print('--------------------')
+        y = list(obj.resulttimes.values_list('result_time', flat=True))
+        # x = obj.resulttimes.values('laptimes')
+        xx = obj.resulttimes.prefetch_related('laptimes')
+        # print('------------------')
+        # xxx = xx[0].laptimes
+        # print(xxx)
+        # print(type(xxx))
+        # print(dir(xxx))
+        # print('------------------')
+        # xx = obj.resulttimes
+        x = [list(i.laptimes.values_list('lap_time', flat=True)) for i in xx]
+        # print('time', y)
+        # print('lap', x)
+        # print('type', type(x))
+        # print('dir', dir(x))
+        # print('--------------------')
+        graph = utils.make_img(y, x)
+        # return obj.make_graph()
+        return graph
 
 
 class TrainingProgramSerializer(serializers.ModelSerializer):
-    training_menu = serializers.SerializerMethodField()
+    # training_menu = serializers.SerializerMethodField()
+    training_menu = TrainingMenuSerializer(
+        read_only=True, many=True, source='trainingmenus')
     # username = UserSerializer()
     username = UserSerializer(read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(
@@ -185,6 +225,15 @@ class TrainingProgramSerializer(serializers.ModelSerializer):
                 'training_menu',
                 'user_id',
         ]
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        queryset = queryset.select_related('username')
+        queryset = queryset.prefetch_related(
+            'trainingmenus',
+            'trainingmenus__resulttimes',
+            'trainingmenus__resulttimes__laptimes')
+        return queryset
 
     def get_training_menu(self, obj):
         try:
