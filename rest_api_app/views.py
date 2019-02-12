@@ -47,9 +47,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 request.data['profile_image'])
 
         serializer = self.get_serializer(data=request.data)
-        print('------------>>>>>>>>>>>', serializer)
+        # print('------------>>>>>>>>>>>', serializer)
         serializer.is_valid(raise_exception=True)
-        print('------------>>>>>>>>>>>', serializer.validated_data)
+        # print('------------>>>>>>>>>>>', serializer.validated_data)
         # print('------------>>>>>>>>>>>',serializer.errors)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -101,7 +101,7 @@ class TrainingProgramViewSet(viewsets.ModelViewSet):
     # lookup_field = 'pk'
 
     def get_queryset(self):
-        queryset = models.TrainingProgram.objects.all()
+        queryset = models.TrainingProgram.objects.all().order_by('-training_date')
         queryset = self.get_serializer_class().setup_eager_loading(queryset)
         # print('-------------------------------------')
         # qs_ = queryset
@@ -265,29 +265,117 @@ def save_lap_time(lap_time_list, result):
 
 
 @api_view(['GET'])
+def SchoolsName(request):
+    from rest_api_app.utils import Team16
+    import codecs
+    data = {}
+    data['schools'] = sorted(list(Team16))
+    data['years'] = [y for y in range(2008, 2018)]
+    data['sex'] = ['Man', 'Woman']
+    data['distances'] = [50, 100, 200, 400, 800]
+    data['styles'] = ['Fr', 'Ba', 'Br', 'Fly', 'IM']
+
+    return Response({"status": "success",
+                     "status_message": "success",
+                     "data": data
+                     }, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def GraphAndTableData(request):
+    from rest_api_app.utils import Df
+    from io import BytesIO
+    from base64 import b64encode
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    import seaborn as sns
+    rq_data = json.loads(request.body)
+
+    sex_dic = {'Man': 'm', 'Woman': 'w'}
+
+    school = rq_data['school']
+    year = rq_data['year']
+    style = [rq_data['style'].lower()]
+    distance = [rq_data['distance']]
+    sex = [sex_dic[s] for s in rq_data['sex']]
+
+    col = ['Name', 'Age', 'Sex', 'Style',
+           'Distance', 'Time', 'Rank', 'kyu', 'Year']
+
+    try:
+        dfa = Df[Df.Competition == '16高']
+        # print(dfa.head())
+        # print(dfa[dfa.Team.isin(school)])
+
+        dfc = dfa[(dfa.Team.isin(school)) &
+                  (dfa.Year.isin(year)) &
+                  (dfa.Style.isin(style)) &
+                  (dfa.Distance.isin(distance)) &
+                  (dfa.Sex.isin(sex))]
+        dfc = dfc[col]
+
+        # print(dfc.head())
+        rows = [r.to_dict() for i, r in dfc.iterrows()]
+
+        header = [{'text': x, 'value': x} for x in dfc.columns]
+        # print(rows)
+
+        # table = dfc.to_html(index=False)
+        plt.style.use('seaborn-deep')
+        fig, ax = plt.subplots()
+        ax = sns.boxplot(dfc.Year, dfc.kyu, hue='Sex', data=dfc)
+        canvas = FigureCanvasAgg(fig)
+
+        png_output = BytesIO()
+        canvas.print_png(png_output)
+        bs64 = b64encode(png_output.getvalue())
+        image = str(bs64)
+        image = image[2:-1]
+        img = 'data:image/png;base64,{}'.format(image)
+
+        # table = dfc[col].to_html(index=False)
+
+        dict = {
+            'school': school,
+            'image': img,
+            'table': table,
+            'header': header,
+            'rows': rows,
+            # 'name': dfc.Name.tolist(),
+            # 'time': dfc.Time.tolist(),
+            # 'team': dfc.Team.tolist(),
+            # 'style': dfc.Style.tolist(),
+            # 'sex': dfc.Sex.tolist(),
+            # 'distanse': dfc.Distance.tolist(),
+            # 'kyu': dfc.kyu.tolist(),
+            # 'rank': dfc.Rank.tolist()
+            }
+        plt.close()
+
+        return Response({"status": "success",
+                         "status_message": "",
+                         "data": dict
+                         }, status=status.HTTP_200_OK)
+
+    except:
+        dict = {'table': 'No Data...'}
+        return Response({"status": "success",
+                         "status_message": "",
+                         "data": dict
+                         }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
 def LoginUser(request):
     data = {}
 
     request_user_instance = User.objects.get(id=request.user.id)
     data['user'] = UserSerializer(request_user_instance).data
-    # print('User-----', data['user'])
-    # print('----------------->>>>>', models.Profile.objects.get(user=request.user))
 
-    # if data['user']['profile'] is not None:
     request_user_profile_instance = models.Profile.objects.get(
         user=request.user)
     data['profile'] = ProfileSerializer(request_user_profile_instance).data
-    # print('Profile-----', data['profile'])
-
-    # else:
-    #     data['profile'] = {'birthday': None,
-    #                         'family_name': None,
-    #                         'first_name': None,
-    #                         'profile_image': None,
-    #                         'sex': None,
-    #                         'style_one': None,
-    #                         'user': request.user.id,
-    #                         }
 
     return Response({
                     "data": data,

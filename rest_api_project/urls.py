@@ -44,6 +44,8 @@ urlpatterns = [
     path('auth/', obtain_jwt_token),
     path('logout/', refresh_jwt_token),
     path('datainput/', views.DataInput, name='datainput'),
+    path('schoolsname/', views.SchoolsName, name='schoolsname'),
+    path('graphandtabledata/', views.GraphAndTableData, name='graphandtabledata'),
     path('login_user/', views.LoginUser),
     path('test_func/', views.test_func),
     # path('logout/', views.Logout.as_view()),

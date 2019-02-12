@@ -1,6 +1,7 @@
 from django.contrib.auth.middleware import get_user
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import SimpleLazyObject
+from django.conf import settings
 
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -12,6 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
+import os
 from io import BytesIO
 
 import pandas as pd
@@ -52,6 +54,13 @@ ONE_TO_TEN_CHOICES = [
 ONE_TO_SIXTY_CHOICE = [
     (num, num) for num in range(0, 60)
 ]
+
+# PATH = os.path.join(os.path.join(os.path.dirname(__file__), 'Result_all.csv'))
+PATH = os.path.join(settings.STATIC_URL, 'Result_all.csv')
+#
+Df = pd.read_csv(PATH)
+Team16 = set(Df[Df.Competition == '16高'].Team)
+Df16 = Df[Df.Team.isin(Team16)]
 
 # TIME_CIRCLE = [
 #     (circle)

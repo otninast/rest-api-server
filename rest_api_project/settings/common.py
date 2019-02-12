@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+import datetime
 # from rest_api_app import utils
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -123,6 +124,7 @@ REST_FRAMEWORK = {
 JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3600),
 }
 
 # Internationalization
