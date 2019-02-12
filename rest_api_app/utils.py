@@ -64,7 +64,7 @@ def school16():
     Df = pd.read_csv(PATH)
     Team16 = set(Df[Df.Competition == '16高'].Team)
     Df16 = Df[Df.Team.isin(Team16)]
-    return Df16
+    return Df16, Team16
 
 # TIME_CIRCLE = [
 #     (circle)
