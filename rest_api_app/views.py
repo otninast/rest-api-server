@@ -47,9 +47,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 request.data['profile_image'])
 
         serializer = self.get_serializer(data=request.data)
-        print('------------>>>>>>>>>>>', serializer)
+        # print('------------>>>>>>>>>>>', serializer)
         serializer.is_valid(raise_exception=True)
-        print('------------>>>>>>>>>>>', serializer.validated_data)
+        # print('------------>>>>>>>>>>>', serializer.validated_data)
         # print('------------>>>>>>>>>>>',serializer.errors)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -96,9 +96,26 @@ class MenuNameViewSet(viewsets.ModelViewSet):
 class TrainingProgramViewSet(viewsets.ModelViewSet):
 
     queryset = models.TrainingProgram.objects.all().order_by('-training_date')
-    serializer_class = serializers.TrainingProgramSerializer
+    serializer_class = TrainingProgramSerializer
     authentication_classes = (JSONWebTokenAuthentication,)
-    lookup_field = 'pk'
+    # lookup_field = 'pk'
+
+    def get_queryset(self):
+        queryset = models.TrainingProgram.objects.all().order_by('-training_date')
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        # print('-------------------------------------')
+        # qs_ = queryset
+        # t_m_l = [list(a.trainingmenus.values())[0] for a in qs_]
+        # t_m = [a.trainingmenus for a in qs_]
+        # qs = [a.values('resulttimes') for a in t_m]
+        #
+        # print('viewset', qs)
+        # # print('[0]', qs[0])
+        # print('type', type(qs))
+        # print('dir', dir(qs))
+        # print(dir(self))
+        # print('-------------------------------------')
+        return queryset
 
 
 class TrainingMenuViewSet(viewsets.ModelViewSet):
@@ -106,11 +123,21 @@ class TrainingMenuViewSet(viewsets.ModelViewSet):
     queryset = models.TrainingMenu.objects.all()
     serializer_class = serializers.TrainingMenuSerializer
 
+    def get_queryset(self):
+        queryset = models.TrainingMenu.objects.all()
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
+
 
 class ResultTimeViewSet(viewsets.ModelViewSet):
 
     queryset = models.ResultTime.objects.all()
     serializer_class = serializers.ResultTimeSerializer
+
+    def get_queryset(self):
+        queryset = models.ResultTime.objects.all()
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
 
 
 class LapTimeViewSet(viewsets.ModelViewSet):
@@ -126,6 +153,7 @@ def DataInput(request):
     request_json = json.loads(request.body)
 
     program = save_training_program(request, request_json['trainingData'])
+
     if program is False:
         return Response({"status": "failure to save training detail",
                          }, status=status.HTTP_400_BAD_REQUEST)
@@ -142,7 +170,6 @@ def DataInput(request):
                          }, status=status.HTTP_400_BAD_REQUEST)
 
     lap = save_lap_time(lap_time_list, result)
-    print(lap)
 
     return Response({"status": "success",
                      "status_message": "Training includeing Laptime Created Successfully"
@@ -238,29 +265,119 @@ def save_lap_time(lap_time_list, result):
 
 
 @api_view(['GET'])
+def SchoolsName(request):
+    from rest_api_app.utils import Team16
+    import codecs
+    data = {}
+    data['schools'] = sorted(list(Team16))
+    data['years'] = [y for y in range(2008, 2018)]
+    data['sex'] = ['Man', 'Woman']
+    data['distances'] = [50, 100, 200, 400, 800]
+    data['styles'] = ['Fr', 'Ba', 'Br', 'Fly', 'IM']
+
+    return Response({"status": "success",
+                     "status_message": "success",
+                     "data": data
+                     }, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def GraphAndTableData(request):
+    from rest_api_app.utils import school16
+    from io import BytesIO
+    from base64 import b64encode
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    import seaborn as sns
+
+    Df = school16()
+    rq_data = json.loads(request.body)
+
+    sex_dic = {'Man': 'm', 'Woman': 'w'}
+
+    school = rq_data['school']
+    year = rq_data['year']
+    style = [rq_data['style'].lower()]
+    distance = [rq_data['distance']]
+    sex = [sex_dic[s] for s in rq_data['sex']]
+
+    col = ['Name', 'Age', 'Sex', 'Style',
+           'Distance', 'Time', 'Rank', 'kyu', 'Year']
+
+    try:
+        dfa = Df[Df.Competition == '16高']
+        # print(dfa.head())
+        # print(dfa[dfa.Team.isin(school)])
+
+        dfc = dfa[(dfa.Team.isin(school)) &
+                  (dfa.Year.isin(year)) &
+                  (dfa.Style.isin(style)) &
+                  (dfa.Distance.isin(distance)) &
+                  (dfa.Sex.isin(sex))]
+        dfc = dfc[col]
+
+        # print(dfc.head())
+        rows = [r.to_dict() for i, r in dfc.iterrows()]
+
+        header = [{'text': x, 'value': x} for x in dfc.columns]
+        # print(rows)
+
+        # table = dfc.to_html(index=False)
+        plt.style.use('seaborn-deep')
+        fig, ax = plt.subplots()
+        ax = sns.boxplot(dfc.Year, dfc.kyu, hue='Sex', data=dfc)
+        canvas = FigureCanvasAgg(fig)
+
+        png_output = BytesIO()
+        canvas.print_png(png_output)
+        bs64 = b64encode(png_output.getvalue())
+        image = str(bs64)
+        image = image[2:-1]
+        img = 'data:image/png;base64,{}'.format(image)
+
+        # table = dfc[col].to_html(index=False)
+
+        dict = {
+            'school': school,
+            'image': img,
+            'table': table,
+            'header': header,
+            'rows': rows,
+            # 'name': dfc.Name.tolist(),
+            # 'time': dfc.Time.tolist(),
+            # 'team': dfc.Team.tolist(),
+            # 'style': dfc.Style.tolist(),
+            # 'sex': dfc.Sex.tolist(),
+            # 'distanse': dfc.Distance.tolist(),
+            # 'kyu': dfc.kyu.tolist(),
+            # 'rank': dfc.Rank.tolist()
+            }
+        plt.close()
+
+        return Response({"status": "success",
+                         "status_message": "",
+                         "data": dict
+                         }, status=status.HTTP_200_OK)
+
+    except:
+        dict = {'table': 'No Data...'}
+        return Response({"status": "success",
+                         "status_message": "",
+                         "data": dict
+                         }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
 def LoginUser(request):
     data = {}
 
     request_user_instance = User.objects.get(id=request.user.id)
     data['user'] = UserSerializer(request_user_instance).data
-    # print('User-----', data['user'])
-    # print('----------------->>>>>', models.Profile.objects.get(user=request.user))
 
-    # if data['user']['profile'] is not None:
     request_user_profile_instance = models.Profile.objects.get(
         user=request.user)
     data['profile'] = ProfileSerializer(request_user_profile_instance).data
-    # print('Profile-----', data['profile'])
-
-    # else:
-    #     data['profile'] = {'birthday': None,
-    #                         'family_name': None,
-    #                         'first_name': None,
-    #                         'profile_image': None,
-    #                         'sex': None,
-    #                         'style_one': None,
-    #                         'user': request.user.id,
-    #                         }
 
     return Response({
                     "data": data,
@@ -289,91 +406,3 @@ def test_func(request):
     return Response({"status": "success",
                      "status_message": "User Created Successfully"
                      }, status=status.HTTP_200_OK)
-
-
-# @csrf_exempt
-# @api_view(['POST'])
-# def DataInput_(request):
-#
-#     request_json = json.loads(request.body)
-#     if request_json['trainingData']['training_image']:
-#         b64data = request_json['trainingData']['training_image']
-#         image = b64_to_image(b64data)
-#         request_json['trainingData']['training_image'] = image
-#
-#     request_json['trainingData']['username'] = request.user.id
-#     request_json['trainingData']['user_id'] = request.user.id
-#
-#     seri_training = TrainingProgramSerializer(
-#         data=request_json["trainingData"])
-#
-#     if not seri_training.is_valid():
-#         return Response({
-#                         "status": "failure to save training",
-#                         "status_message": seri_training.errors,
-#                         "data": seri_training.data
-#                         }, status=status.HTTP_400_BAD_REQUEST)
-#
-#     training_program = seri_training.save()
-#     request_json['menuData']['training_program'] = training_program.id
-#     menu_name_str = request_json['menuData']['menu_name']
-#     menu_name_obj = models.MenuName.objects.filter(menu_name=menu_name_str)
-#     request_json['menuData']['menu_name'] = menu_name_obj[0].id
-#     request_json['menuData']['menu_name_id'] = menu_name_obj[0].id
-#     seri_menu = TrainingMenuSerializer(data=request_json["menuData"])
-#
-#     if not seri_menu.is_valid():
-#         return Response({
-#                         "status": "failure to save training detail",
-#                         "status_message": seri_menu.errors
-#                         }, status=status.HTTP_400_BAD_REQUEST)
-#
-#     training_menu = seri_menu.save()
-#
-#     lap_time_list = []
-#
-#     for data in request_json['resultTime']:
-#
-#         data['training_menu'] = training_menu.id
-#         data['result_time'] = str_to_float(data['result_time_str'])
-#
-#         lap_time_list.append(data['lapTime'])
-#
-#     seri_result = ResultTimeSerializer(
-#         data=request_json['resultTime'], many=True)
-#     # 複数を保存するための処理
-#
-#     if not seri_result.is_valid():
-#         return Response({
-#                         "status": "failure to save result time",
-#                         "status_message": seri_menu.errors
-#                         }, status=status.HTTP_400_BAD_REQUEST)
-#
-#     result_time = seri_result.save()
-#     # print('-------------->>>>>>>>>', type(lap_time_list), lap_time_list)
-#     try:
-#         for lap_time_set, result_time_set in zip(lap_time_list, result_time):
-#
-#             list(map(lambda x: x.update(
-#                 {'result_time': result_time_set.id}), lap_time_set))
-#             list(map(lambda x: x.update(
-#                 {'lap_time': str_to_float(x['lap_time'])}), lap_time_set))
-#             seri_lap = LapTimeSerializer(data=lap_time_set, many=True)
-#
-#             if not seri_lap.is_valid():
-#                 return Response({
-#                                 "status": "failure to save result time",
-#                                 "status_message": seri_lap.errors
-#                                 }, status=status.HTTP_400_BAD_REQUEST)
-#             seri_lap.save()
-#
-#             return Response({
-#                         "status": "success",
-#                         "status_message": "User Created Successfully"
-#                         }, status=status.HTTP_200_OK)
-#     except TypeError:
-#         print('---------- ラップタイムは保存できませんでした。')
-#         return Response({
-#                     "status": "success",
-#                     "status_message": "User Created Successfully"
-#                     }, status=status.HTTP_200_OK)
