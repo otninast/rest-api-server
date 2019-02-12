@@ -266,8 +266,9 @@ def save_lap_time(lap_time_list, result):
 
 @api_view(['GET'])
 def SchoolsName(request):
-    from rest_api_app.utils import Team16
+    from rest_api_app.utils import school16
     import codecs
+    _, Team16 = school16()
     data = {}
     data['schools'] = sorted(list(Team16))
     data['years'] = [y for y in range(2008, 2018)]
@@ -291,7 +292,7 @@ def GraphAndTableData(request):
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     import seaborn as sns
 
-    Df = school16()
+    Df, _ = school16()
     rq_data = json.loads(request.body)
 
     sex_dic = {'Man': 'm', 'Woman': 'w'}
