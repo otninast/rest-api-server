@@ -56,11 +56,15 @@ ONE_TO_SIXTY_CHOICE = [
 ]
 
 # PATH = os.path.join(os.path.join(os.path.dirname(__file__), 'Result_all.csv'))
-PATH = os.path.join(settings.STATIC_URL, 'Result_all.csv')
-#
-Df = pd.read_csv(PATH)
-Team16 = set(Df[Df.Competition == '16高'].Team)
-Df16 = Df[Df.Team.isin(Team16)]
+
+
+def school16():
+    PATH = os.path.join(settings.STATIC_URL, 'Result_all.csv')
+    #
+    Df = pd.read_csv(PATH)
+    Team16 = set(Df[Df.Competition == '16高'].Team)
+    Df16 = Df[Df.Team.isin(Team16)]
+    return Df16
 
 # TIME_CIRCLE = [
 #     (circle)

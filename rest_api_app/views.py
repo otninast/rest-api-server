@@ -284,12 +284,14 @@ def SchoolsName(request):
 @csrf_exempt
 @api_view(['POST'])
 def GraphAndTableData(request):
-    from rest_api_app.utils import Df
+    from rest_api_app.utils import school16
     from io import BytesIO
     from base64 import b64encode
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     import seaborn as sns
+
+    Df = school16()
     rq_data = json.loads(request.body)
 
     sex_dic = {'Man': 'm', 'Woman': 'w'}
