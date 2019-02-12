@@ -341,7 +341,6 @@ def GraphAndTableData(request):
         dict = {
             'school': school,
             'image': img,
-            'table': table,
             'header': header,
             'rows': rows,
             # 'name': dfc.Name.tolist(),

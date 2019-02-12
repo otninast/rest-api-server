@@ -56,4 +56,5 @@ urlpatterns = [
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # if settings.DEBUG:
-urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
+if 'silk' in settings.INSTALLED_APPS:
+    urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
