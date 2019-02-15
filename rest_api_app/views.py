@@ -303,8 +303,8 @@ def GraphAndTableData(request):
     distance = [rq_data['distance']]
     sex = [sex_dic[s] for s in rq_data['sex']]
 
-    col = ['Name', 'Age', 'Sex', 'Style',
-           'Distance', 'Time', 'Rank', 'kyu', 'Year']
+    col = ['Year', 'Name', 'Time', 'Rank', 'Team', 'Age', 'Sex', 'Style',
+           'Distance', 'kyu']
 
     try:
         dfa = Df[Df.Competition == '16高']
@@ -316,18 +316,18 @@ def GraphAndTableData(request):
                   (dfa.Style.isin(style)) &
                   (dfa.Distance.isin(distance)) &
                   (dfa.Sex.isin(sex))]
-        dfc = dfc[col]
+        # dfc = dfc[col]
 
         # print(dfc.head())
-        rows = [r.to_dict() for i, r in dfc.iterrows()]
+        rows = [r.to_dict() for i, r in dfc[col].iterrows()]
 
-        header = [{'text': x, 'value': x} for x in dfc.columns]
-        # print(rows)
+        header = [{'text': x, 'value': x} for x in dfc[col].columns]
 
         # table = dfc.to_html(index=False)
         plt.style.use('seaborn-deep')
         fig, ax = plt.subplots()
         ax = sns.boxplot(dfc.Year, dfc.kyu, hue='Sex', data=dfc)
+        # ax = sns.boxplot(dfc.Year, dfc.Time_sec, hue='Team', data=dfc)
         canvas = FigureCanvasAgg(fig)
 
         png_output = BytesIO()

@@ -60,7 +60,9 @@ ONE_TO_SIXTY_CHOICE = [
 
 def school16():
     # print(settings.STATIC_ROOT)
-    PATH = os.path.join(settings.STATIC_ROOT, 'Result_all.csv')
+    PATH = os.path.join(os.path.join(
+        os.path.dirname(__file__), 'Result_all.csv'))
+    # PATH = os.path.join(settings.STATIC_ROOT, 'Result_all.csv')
     #
     Df = pd.read_csv(PATH)
     Team16 = set(Df[Df.Competition == '16高'].Team)
